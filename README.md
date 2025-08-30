@@ -2,6 +2,9 @@
 
 **Image Detection App** is a SwiftUI application that allows you to select an image from your library and classify it using a Core ML image detection model. Unlike object detection, which identifies and localizes objects, image detection classifies the entire image into a single label.  
 
+> [!WARNING]  
+> Due to the size of the model files, I have not included them in the materials. These projects will not compile unless you add the yolo model. Sorry for the inconvenience...
+
 ## The Purpose  
 
 Use Core ML to perform image classification tasks, enabling your apps to analyze and categorize images locally on-device.  
