@@ -6,8 +6,7 @@
 
 import Foundation
 
-struct DetectedObject: Hashable {
-  var label: String
-  var confidence: Float
-  var boundingBox: CGRect
+struct Prediction: Hashable {
+    var label: String
+    var confidence: Float
 }

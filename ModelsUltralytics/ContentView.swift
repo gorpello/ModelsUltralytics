@@ -12,8 +12,8 @@ struct ContentView: View {
     @State private var selectedImage: PhotosPickerItem?
     @State private var image: Image?
     @State private var cgImage: CGImage?
-    @State private var detectedObjects: [DetectedObject] = []
     
+    @State private var predictions: [Prediction] = []
     
     var noImageSelectedView: some View {
         Image(systemName: "photo.on.rectangle.angled")
@@ -36,16 +36,10 @@ struct ContentView: View {
                         }
                     }
                 }
-            //            .onChange(of: cgImage) {
-            //                runModel()
-            //            }
+            
             if let image = image {
                 ImageDisplayView(image: image)
-                    .overlay {
-                        ForEach(detectedObjects, id: \.self) { ident in
-                            `ObjectOverlayView`(object: ident)
-                        }
-                    }
+                
                 Button {
                     runModel()
                 } label: {
@@ -55,8 +49,8 @@ struct ContentView: View {
                 noImageSelectedView
             }
             
-            ForEach(detectedObjects, id: \.self) { obj in
-                Text("\(obj.label)  (\(obj.confidence, format: .percent))")
+            ForEach(predictions, id: \.self) { predicion in
+                Text("\(predicion.label)  (\(predicion.confidence, format: .percent))")
             }
         }
     }
@@ -64,20 +58,21 @@ struct ContentView: View {
     func runModel() {
         guard
             let cgImage = cgImage,
-            let model = try? yolov8x_oiv7(configuration: .init()).model,
+            let model = try? yolov8x_cls(configuration: .init()).model,
             let detector = try? VNCoreMLModel(for: model) else {
             print("Unable to load photo.")
             return
         }
         
+        print("Start request")
         let visionRequest = VNCoreMLRequest(model: detector) { request, error in
-            detectedObjects = []
+            predictions = []
             if let error = error {
                 print(error.localizedDescription)
                 return
             }
             
-            if let results = request.results as? [VNRecognizedObjectObservation] {
+            if let results = request.results as? [VNClassificationObservation] {
                 
                 if results.isEmpty {
                     print("No results found.")
@@ -86,19 +81,16 @@ struct ContentView: View {
                 
                 for result in Array(results.prefix(5)) {
                     
-                    if let firstIdentifier = result.labels.first {
-                        let confidence = firstIdentifier.confidence
-                        let label = firstIdentifier.identifier
-                        
-                        let boundingBox = result.boundingBox
-                        
-                        let object = DetectedObject(
-                            label: label,
-                            confidence: confidence,
-                            boundingBox: boundingBox
-                        )
-                        detectedObjects.append(object)
-                    }
+                    let identifier = result.identifier
+                    let confidence = result.confidence
+                    
+                    let object = Prediction(
+                        label: result.identifier,
+                        confidence: result.confidence,
+                    )
+                    
+                    predictions.append(object)
+                    
                 }
             }
         }
